@@ -8,6 +8,18 @@ from datetime import date, timedelta
 # 1. 페이지 설정 및 테마 최적화
 st.set_page_config(layout="wide", page_title="Asset Flow Canvas")
 
+# ==========================================
+# [신규 추가] 팀 전용 보안 암호 시스템
+# ==========================================
+TEAM_PASSWORD = "jsgglobal"  # 이 부분에 원하시는 팀 전용 암호를 설정하세요!
+entered_password = st.sidebar.text_input("🔒 시스템 접속 암호", type="password")
+
+if entered_password != TEAM_PASSWORD:
+    st.title("🔒 Asset Flow Canvas (보안 시스템)")
+    st.warning("이 시스템은 인가된 팀원만 접근할 수 있습니다. 좌측 사이드바에 암호를 입력해 주세요.")
+    st.stop()  # 암호가 틀리면 여기서 코드 실행을 완전히 멈추고 아래 화면을 그리지 않습니다!
+# ==========================================
+
 st.markdown("""
     <style>
     .main { background-color: #f8fafc; color: #000000; }
