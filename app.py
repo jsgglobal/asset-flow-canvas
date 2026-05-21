@@ -9,15 +9,15 @@ from datetime import date, timedelta
 st.set_page_config(layout="wide", page_title="Asset Flow Canvas")
 
 # ==========================================
-# [신규 추가] 팀 전용 보안 암호 시스템
+# [보안 시스템] 팀 전용 보안 암호 설정
 # ==========================================
-TEAM_PASSWORD = "jsgglobal"  # 이 부분에 원하시는 팀 전용 암호를 설정하세요!
+TEAM_PASSWORD = "jsgglobal"
 entered_password = st.sidebar.text_input("🔒 시스템 접속 암호", type="password")
 
 if entered_password != TEAM_PASSWORD:
     st.title("🔒 Asset Flow Canvas (보안 시스템)")
     st.warning("이 시스템은 인가된 팀원만 접근할 수 있습니다. 좌측 사이드바에 암호를 입력해 주세요.")
-    st.stop()  # 암호가 틀리면 여기서 코드 실행을 완전히 멈추고 아래 화면을 그리지 않습니다!
+    st.stop()  # 암호가 틀리면 여기서 코드 실행을 멈추고 아래 내용을 렌더링하지 않습니다.
 # ==========================================
 
 st.markdown("""
@@ -52,23 +52,53 @@ sector_map = {
     'Communication': {'ticker': 'XLC', 'color': 'rgba(31, 119, 180, 0.8)'}
 }
 
+# 순수 미국 상장 핵심 우량주 목록
 stock_map = {
-    'Technology': ['AAPL', 'MSFT', 'NVDA', 'AVGO', 'ORCL'],
-    'Energy': ['XOM', 'CVX', 'COP', 'SLB', 'EOG'],
-    'Financials': ['JPM', 'BAC', 'GS', 'MS', 'WFC'],
-    'Health Care': ['UNH', 'JNJ', 'LLY', 'ABBV', 'MRK'],
-    'Industrials': ['CAT', 'HON', 'GE', 'UPS', 'LMT'],
-    'Materials': ['LIN', 'SHW', 'NEM', 'APD', 'FCX'],
-    'Cons Disc': ['AMZN', 'TSLA', 'HD', 'MCD', 'NKE'],
-    'Cons Staples': ['WMT', 'PG', 'KO', 'PEP', 'COST'],
-    'Real Estate': ['PLD', 'AMT', 'EQIX', 'CCI', 'PSA'],
-    'Utilities': ['NEE', 'DUK', 'SO', 'D', 'AEP'],
-    'Communication': ['GOOGL', 'META', 'NFLX', 'TMUS', 'DIS']
+    'Technology': ['AAPL', 'MSFT', 'NVDA', 'AVGO', 'ORCL', 'ADBE', 'CRM', 'AMD', 'QCOM', 'TXN', 'IBM', 'INTC'],
+    'Energy': ['XOM', 'CVX', 'COP', 'SLB', 'EOG', 'MPC', 'PSX', 'VLO', 'OKE', 'BKR'],
+    'Financials': ['JPM', 'BAC', 'GS', 'MS', 'WFC', 'C', 'BRK-B', 'SPGI', 'BLK', 'AXP', 'V', 'MA'],
+    'Health Care': ['UNH', 'JNJ', 'LLY', 'ABBV', 'MRK', 'TMO', 'PFE', 'ABT', 'DHR', 'AMGN', 'MDT', 'BMY'],
+    'Industrials': ['CAT', 'HON', 'GE', 'UPS', 'LMT', 'BA', 'UNP', 'RTX', 'DE', 'FDX', 'MMM'],
+    'Materials': ['LIN', 'SHW', 'NEM', 'APD', 'FCX', 'ECL', 'DOW', 'NUE', 'DD', 'ALB'],
+    'Cons Disc': ['AMZN', 'TSLA', 'HD', 'MCD', 'NKE', 'LOW', 'TJX', 'SBUX', 'BKNG', 'TGT', 'F', 'GM'],
+    'Cons Staples': ['WMT', 'PG', 'KO', 'PEP', 'COST', 'PM', 'MO', 'MDLZ', 'CL', 'SYY', 'EL'],
+    'Real Estate': ['PLD', 'AMT', 'EQIX', 'CCI', 'PSA', 'SPG', 'WELL', 'DLR', 'O', 'VICI'],
+    'Utilities': ['NEE', 'DUK', 'SO', 'D', 'AEP', 'CEG', 'EXC', 'SRE', 'XEL', 'PEG'],
+    'Communication': ['GOOGL', 'META', 'NFLX', 'TMUS', 'DIS', 'VZ', 'T', 'CMCSA', 'CHTR', 'WBD']
+}
+
+# 티커별 정식 기업명 매핑 데이터베이스
+stock_names = {
+    'AAPL': 'Apple Inc.', 'MSFT': 'Microsoft Corp.', 'NVDA': 'NVIDIA Corp.', 'AVGO': 'Broadcom Inc.', 'ORCL': 'Oracle Corp.',
+    'ADBE': 'Adobe Inc.', 'CRM': 'Salesforce Inc.', 'AMD': 'Advanced Micro Devices', 'QCOM': 'Qualcomm Inc.', 'TXN': 'Texas Instruments',
+    'IBM': 'International Business Machines', 'INTC': 'Intel Corp.',
+    'XOM': 'Exxon Mobil Corp.', 'CVX': 'Chevron Corp.', 'COP': 'ConocoPhillips', 'SLB': 'Schlumberger NV', 'EOG': 'EOG Resources',
+    'MPC': 'Marathon Petroleum', 'PSX': 'Phillips 66', 'VLO': 'Valero Energy', 'OKE': 'ONEOK Inc.', 'BKR': 'Baker Hughes',
+    'JPM': 'JPMorgan Chase & Co.', 'BAC': 'Bank of America Corp.', 'GS': 'Goldman Sachs Group', 'MS': 'Morgan Stanley', 'WFC': 'Wells Fargo & Co.',
+    'C': 'Citigroup Inc.', 'BRK-B': 'Berkshire Hathaway Inc.', 'SPGI': 'S&P Global Inc.', 'BLK': 'BlackRock Inc.', 'AXP': 'American Express',
+    'V': 'Visa Inc.', 'MA': 'Mastercard Inc.',
+    'UNH': 'UnitedHealth Group', 'JNJ': 'Johnson & Johnson', 'LLY': 'Eli Lilly & Co.', 'ABBV': 'AbbVie Inc.', 'MRK': 'Merck & Co.',
+    'TMO': 'Thermo Fisher Scientific', 'PFE': 'Pfizer Inc.', 'ABT': 'Abbott Laboratories', 'DHR': 'Danaher Corp.', 'AMGN': 'Amgen Inc.',
+    'MDT': 'Medtronic PLC', 'BMY': 'Bristol-Myers Squibb',
+    'CAT': 'Caterpillar Inc.', 'HON': 'Honeywell International', 'GE': 'General Electric', 'UPS': 'United Parcel Service', 'LMT': 'Lockheed Martin',
+    'BA': 'Boeing Co.', 'UNP': 'Union Pacific Corp.', 'RTX': 'RTX Corp.', 'DE': 'Deere & Co.', 'FDX': 'FedEx Corp.', 'MMM': '3M Co.',
+    'LIN': 'Linde PLC', 'SHW': 'Sherwin-Williams Co.', 'NEM': 'Newmont Corp.', 'APD': 'Air Products & Chemicals', 'FCX': 'Freeport-McMoRan',
+    'ECL': 'Ecolab Inc.', 'DOW': 'Dow Inc.', 'NUE': 'Nucor Corp.', 'DD': 'DuPont de Nemours', 'ALB': 'Albemarle Corp.',
+    'AMZN': 'Amazon.com Inc.', 'TSLA': 'Tesla Inc.', 'HD': 'Home Depot Inc.', 'MCD': "McDonald's Corp.", 'NKE': 'Nike Inc.',
+    'LOW': "Lowe's Companies", 'TJX': 'TJX Companies', 'SBUX': 'Starbucks Corp.', 'BKNG': 'Booking Holdings', 'TGT': 'Target Corp.',
+    'F': 'Ford Motor Co.', 'GM': 'General Motors',
+    'WMT': 'Walmart Inc.', 'PG': 'Procter & Gamble', 'KO': 'Coca-Cola Co.', 'PEP': 'PepsiCo Inc.', 'COST': 'Costco Wholesale',
+    'PM': 'Philip Morris International', 'MO': 'Altria Group', 'MDLZ': 'Mondelez International', 'CL': 'Colgate-Palmolive', 'SYY': 'Sysco Corp.', 'EL': 'Estee Lauder',
+    'PLD': 'Prologis Inc.', 'AMT': 'American Tower Corp.', 'EQIX': 'Equinix Inc.', 'CCI': 'Crown Castle Inc.', 'PSA': 'Public Storage',
+    'SPG': 'Simon Property Group', 'WELL': 'Welltower Inc.', 'DLR': 'Digital Realty Trust', 'O': 'Realty Income Corp.', 'VICI': 'VICI Properties',
+    'NEE': 'NextEra Energy', 'DUK': 'Duke Energy', 'SO': 'Southern Co.', 'D': 'Dominion Energy', 'AEP': 'American Electric Power',
+    'CEG': 'Constellation Energy', 'EXC': 'Exelon Corp.', 'SRE': 'Sempra', 'XEL': 'Xcel Energy', 'PEG': 'Public Service Enterprise',
+    'GOOGL': 'Alphabet Inc.', 'META': 'Meta Platforms Inc.', 'NFLX': 'Netflix Inc.', 'TMUS': 'T-Mobile US Inc.', 'DIS': 'Walt Disney Co.',
+    'VZ': 'Verizon Communications', 'T': 'AT&T Inc.', 'CMCSA': 'Comcast Corp.', 'CHTR': 'Charter Communications', 'WBD': 'Warner Bros. Discovery'
 }
 
 # 3. 왼쪽 영역 (사이드바)
 with st.sidebar:
-    # 문구 변경 적용
     st.header("🔍 Sector Money Flow Canvas 조회 기간")
     start_date = st.date_input("시작일", date.today() - timedelta(days=60))
     end_date = st.date_input("종료일", date.today())
@@ -122,7 +152,9 @@ with col_left:
     perf_list = []
     for t in target_stocks:
         val = stock_performance.get(t, 0)
-        perf_list.append({'티커': t, '기간 수익률': float(val)})
+        name = stock_names.get(t, "")
+        display_name = f"{t} ({name})" if name else t
+        perf_list.append({'종목 (티커)': display_name, '기간 수익률': float(val)})
         
     stock_df = pd.DataFrame(perf_list).sort_values(by='기간 수익률', ascending=False)
     st.dataframe(
@@ -133,12 +165,11 @@ with col_left:
 with col_right:
     st.subheader("🌊 Sector Money Flow Canvas")
     
-    # [설명 링크 복구] 차트 해석 가이드
     with st.expander("💡 차트 해석 및 활용 가이드 (클릭하여 읽기)", expanded=False):
         st.markdown("""
         **1. 자금의 방향: Flow IN vs Flow OUT**
         * **Sector Flow IN:** 분석 기간 동안 수익률이 (+)인 섹터들로, 시장의 자금이 유입되는 '주도 섹터'를 의미합니다.
-        * **Sector Flow OUT:** 분석 기간 동안 수익률이 (-)인 섹터들로, 현재 자금이 빠져나가는 '소외 섹터'를 뜻합니다.
+        * **Sector Flow OUT:** 분석 기간 동안 수익률이 (-)인 섹터들로, 현재 자금이 빠져나가고 않는 '소외 섹터'를 뜻합니다.
         **2. 선의 굵기:** 섹터의 수익률 절댓값을 의미하며, 선이 굵을수록 해당 섹터의 거래 대금이 강력하게 쏠려 있음을 나타냅니다.
         """)
     
@@ -202,7 +233,9 @@ with col_right:
     top_perf_list = []
     for t in top_stocks:
         val = top_stock_performance.get(t, 0)
-        top_perf_list.append({'티커': t, '기간 수익률': float(val)})
+        name = stock_names.get(t, "")
+        display_name = f"{t} ({name})" if name else t
+        top_perf_list.append({'종목 (티커)': display_name, '기간 수익률': float(val)})
         
     top_stock_df = pd.DataFrame(top_perf_list).sort_values(by='기간 수익률', ascending=False)
     st.dataframe(
