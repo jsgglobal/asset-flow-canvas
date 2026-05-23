@@ -5,20 +5,8 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import date, timedelta
 
-# 1. 페이지 설정 및 테마 최적화
+# 1. 페이지 설정 및 테마 최적화 (100% 동일)
 st.set_page_config(layout="wide", page_title="Asset Flow Canvas")
-
-# ==========================================
-# [보안 시스템] 팀 전용 보안 암호 설정
-# ==========================================
-TEAM_PASSWORD = "jsgglobal"
-entered_password = st.sidebar.text_input("🔒 시스템 접속 암호", type="password")
-
-if entered_password != TEAM_PASSWORD:
-    st.title("🔒 Asset Flow Canvas (보안 시스템)")
-    st.warning("이 시스템은 인가된 팀원만 접근할 수 있습니다. 좌측 사이드바에 암호를 입력해 주세요.")
-    st.stop()  # 암호가 틀리면 여기서 코드 실행을 멈추고 아래 내용을 렌더링하지 않습니다.
-# ==========================================
 
 st.markdown("""
     <style>
@@ -52,7 +40,7 @@ sector_map = {
     'Communication': {'ticker': 'XLC', 'color': 'rgba(31, 119, 180, 0.8)'}
 }
 
-# 순수 미국 상장 핵심 우량주 목록
+# [수정된 부분] 순수 미국 상장 핵심 우량주 목록 대폭 확충 (ETF, 채권, 해외종목 전면 제외)
 stock_map = {
     'Technology': ['AAPL', 'MSFT', 'NVDA', 'AVGO', 'ORCL', 'ADBE', 'CRM', 'AMD', 'QCOM', 'TXN', 'IBM', 'INTC'],
     'Energy': ['XOM', 'CVX', 'COP', 'SLB', 'EOG', 'MPC', 'PSX', 'VLO', 'OKE', 'BKR'],
@@ -67,7 +55,7 @@ stock_map = {
     'Communication': ['GOOGL', 'META', 'NFLX', 'TMUS', 'DIS', 'VZ', 'T', 'CMCSA', 'CHTR', 'WBD']
 }
 
-# 티커별 정식 기업명 매핑 데이터베이스
+# [신규 추가] 티커별 정식 기업명 매핑 데이터베이스
 stock_names = {
     'AAPL': 'Apple Inc.', 'MSFT': 'Microsoft Corp.', 'NVDA': 'NVIDIA Corp.', 'AVGO': 'Broadcom Inc.', 'ORCL': 'Oracle Corp.',
     'ADBE': 'Adobe Inc.', 'CRM': 'Salesforce Inc.', 'AMD': 'Advanced Micro Devices', 'QCOM': 'Qualcomm Inc.', 'TXN': 'Texas Instruments',
@@ -99,6 +87,7 @@ stock_names = {
 
 # 3. 왼쪽 영역 (사이드바)
 with st.sidebar:
+    # [문구 변경 반영]
     st.header("🔍 Sector Money Flow Canvas 조회 기간")
     start_date = st.date_input("시작일", date.today() - timedelta(days=60))
     end_date = st.date_input("종료일", date.today())
@@ -149,6 +138,7 @@ with col_left:
     target_stocks = stock_map[selected_sector]
     stock_performance = get_performance(target_stocks, start_date, end_date)
     
+    # [수정된 부분] 종목 테이블 내 '티커 (종목명)' 결합 표기 처리
     perf_list = []
     for t in target_stocks:
         val = stock_performance.get(t, 0)
@@ -222,6 +212,7 @@ with col_right:
 
     st.divider()
 
+    # AI 스크리닝 영역
     st.subheader("🔥 AI 자동 스크리닝: 자금 쏠림 1위 섹터 타깃")
     max_sector = max(sector_map.keys(), key=lambda k: abs(sector_performance.get(sector_map[k]['ticker'], 0)))
     max_perf = sector_performance.get(sector_map[max_sector]['ticker'], 0)
@@ -230,6 +221,7 @@ with col_right:
     top_stocks = stock_map[max_sector]
     top_stock_performance = get_performance(top_stocks, start_date, end_date)
     
+    # [수정된 부분] AI 스크리닝 결과 테이블 내 '티커 (종목명)' 결합 표기 처리
     top_perf_list = []
     for t in top_stocks:
         val = top_stock_performance.get(t, 0)
